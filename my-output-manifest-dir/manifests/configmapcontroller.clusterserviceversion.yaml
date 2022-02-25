@@ -1,0 +1,101 @@
+apiVersion: operators.coreos.com/v1alpha1
+kind: ClusterServiceVersion
+metadata:
+  annotations:
+  name: configmap-controller.v0.1.0
+spec:
+  description: This is an operator for generating configmaps.
+  displayName: ConfigMap Controller
+  keywords:
+  - configmap
+  - app
+  maintainers:
+  - email: me@wseaton.com
+    name: Cool Guy Inc.
+  maturity: alpha
+  provider:
+    name: my fancy team
+    url: www.mycompany.com
+  version: 0.1.0
+  minKubeVersion: 1.20.0
+  install:
+    # strategy indicates what type of deployment artifacts are used
+    strategy: deployment
+    # spec for the deployment strategy is a list of deployment specs and required permissions - similar to a pod template used in a deployment
+    spec:
+      permissions:
+      - serviceAccountName: configmap-operator
+        rules:
+        - apiGroups:
+          - ""
+          resources:
+          - configmaps
+          verbs:
+          - '*'
+          # the rest of the rules
+      # permissions required at the cluster scope
+      clusterPermissions:
+      - serviceAccountName: configmap-operator
+        rules:
+        - apiGroups:
+          - ""
+          resources:
+          - serviceaccounts
+          verbs:
+          - '*'
+        - apiGroups:
+          - ""
+          resources:
+          - configmaps
+          verbs:
+          - '*'
+        - apiGroups:
+          - "nullable.se"
+          resources:
+          - configmapgenerators
+          verbs:
+          - '*'
+          # the rest of the rules
+      deployments:
+      - name: configmap-operator
+        spec:
+          replicas: 1
+          selector:
+            matchLabels:
+                app.kubernetes.io/name: configmap-operator
+          template:
+            metadata:
+              labels:
+                app.kubernetes.io/name: configmap-operator
+            spec: 
+              serviceAccountName: configmap-operator
+              containers:
+              - name: operator-pod
+                image: quay.io/wseaton/configmap-operator:v0.1.0
+                imagePullPolicy: IfNotPresent
+  installModes:
+  - supported: true
+    type: OwnNamespace
+  - supported: false
+    type: SingleNamespace
+  - supported: false
+    type: MultiNamespace
+  - supported: true
+    type: AllNamespaces
+  customresourcedefinitions:
+    owned:
+    # a list of CRDs that this operator owns
+    # name is the metadata.name of the CRD (which is of the form <plural>.<group>)
+    - name: configmapgenerators.nullable.se
+      # version is the spec.versions[].name value defined in the CRD
+      version: v1
+      # kind is the CamelCased singular value defined in spec.names.kind of the CRD.
+      kind: ConfigMapGenerator
+      # human-friendly display name of the CRD for rendering in graphical consoles (optional)
+      displayName: ConfigMap Generator
+      # a short description of the CRDs purpose for rendering in graphical consoles (optional)
+      description: Generates a config map based on some data. 
+  nativeAPIs:
+  - group: ""
+    version: v1
+    kind: ConfigMap
