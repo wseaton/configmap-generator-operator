@@ -7,20 +7,19 @@ This is a sample project for documenting what it takes to publish an Operator wr
 ## Tools Required
 
 * `rustup` and `cargo` to do local rust development (of course!)
-* `opm` used to generate the operator bundle image
 * `podman` or `docker` to build container images
-* `operator-sdk` as a development aid for quick testing
+* `opm` used to generate the operator bundle image, [download here](https://github.com/operator-framework/operator-registry/releases)
+* `operator-sdk` as a development aid for quick testing, [install instructions](https://sdk.operatorframework.io/docs/installation/)
 
 ## Building the Operator itself
 
-For packing Rust code in containers you have a lot of options. The simplest mechanism is to use a multi-stage build, with the rust builder image compiling the binary in `release` mode, and then copying that into a minimal linux distro container of your choice.
+For the packaging of Rust code in containers you have a lot of options. The simplest (and most oft recommended) mechanism is to use a multi-stage build, with the rust builder image compiling the binary in `release` mode, and then copying that into a minimal linux container image of your choice. This has the advantage of very small container sizes, without bundling the build tools and/or dev dependencies into the final product.
 
-For compatibilty purposes I am using `fedora:35` as the final base image, as it ships with new versions of libraries that play nicer w/ nightly rust. In production you'd likely switch to something very minimal like alpine, rhel's ubi-micro, or something custom.
+For compatibility purposes I am using `fedora:35` as the final base image, as it ships with new versions of libraries that play nicer w/ nightly rust. In production you'd likely switch to something very minimal like alpine, rhel's ubi-micro, or something custom.
 
 ## ClusterServiceVersion
 
-
-To give instructions on how to install the operator, alongside some of its capabilities, we need to make a ClusterServiceVersion manifest.
+To give OLM instructions on how to install the operator, alongside describing some of its requirements and capabilities, we need to make a `ClusterServiceVersion` manifest.
 
 ```yaml
 apiVersion: operators.coreos.com/v1alpha1
@@ -35,12 +34,12 @@ spec:
   - configmap
   - app
   maintainers:
-  - email: weaton@redhat.com
-    name: Red Hat Inc
+  - email: me@wseaton.com
+    name: Cool Guy Inc.
   maturity: alpha
   provider:
-    name: EDA P&T Team
-    url: www.redhat.com
+    name: my fancy team
+    url: www.mycompany.com
   version: 0.1.0
   minKubeVersion: 1.20.0
 ```
@@ -88,7 +87,7 @@ This starts with basic information on what the operator is, version info, mainta
           # the rest of the rules
 ```
 
-Next we define the install strategy (in this case we are using a deployment), alongisde the permissions that our operator service account needs at runtime.
+Next we define the install strategy (in this case we are using a deployment), alongside the permissions that our operator service account needs at runtime.
 
 ```yaml
       deployments:
@@ -110,13 +109,7 @@ Next we define the install strategy (in this case we are using a deployment), al
                 imagePullPolicy: IfNotPresent
 ```
 
-
-
-
-
-
-
-This section is all about laying how the resulting operator `Deployment` will look, with details around the controller pod itself. In this case we are going with a very simple single replica, one container image deployment. 
+This section is all about laying how the resulting operator `Deployment` will look, with details around the controller pod itself. In this case we are going with a very simple single replica, one container image deployment.
 
 The last sections have some extra optional metadata about dependent objects, which are useful for some of the dependency resolution features built into OLM. If your operator depends on a CRD provided by another operator, OLM will make an effort to install it via the `InstallPlan` that gets generated.
 
@@ -158,3 +151,21 @@ Once we have our CSV made, we can use the `opm alpha bundle generate` to generat
 ## Dev Cluster Testing
 
 The `operator-sdk` makes testing your operator on a dev cluster very easy once the bundle image has been built. While it's primarily meant to be used w/ golang based operators, the `operator-sdk run bundle` command actually doesn't care about the underlying operator implementation. If the metadata is correctly specified in your bundle it will generate the valid Subscription and CatalogSource source objects to install the operator into the currently active cluster in your `~/.kube/config`. This enables rapid testing without requiring publishing the operator to a real external catalog.
+
+
+## Justfile
+
+To wrap all of the above steps into an easy to follow guide, I've provided a `justfile` with some commands as a quickstart.
+
+```sh
+❯ just -l   
+Available recipes:
+    build-bundle-docker
+    generate-olm-bundle
+    install-crd
+    install-operator
+    uninstall-operator
+    validate-bundle
+```
+
+A few variables will need to be replaced, like the registry you plan to push the image to, but it should serve as a decent starting template.
