@@ -1,6 +1,6 @@
 # ConfigMap Generator Operator
 
-### ⚠️ ⚠️ ⚠️ WARNING ⚠️ ⚠️ ⚠️ 
+## ⚠️ WARNING ⚠️
 
 This is a sample project for documenting what it takes to publish an Operator written in Rust via OLM (Operator Lifecycle Manager)! The operator implementation is a toy example, and not something you'd want on your cluster in production 🙂
 
@@ -146,12 +146,11 @@ There is also a section on install modes, which on OpenShift gets translated int
 
 ## Bundle
 
-Once we have our CSV made, we can use the `opm alpha bundle generate` to generate the rest of the files needed to make an operator bundle. The operator bundle image is linked in `Catalogs`, with the eventual goal of making the operator installable by end users w/ other clusters. Since we are just trying to validate that our operator works and is packaged properly, we will skip the specifics of `Catalogs` for now. 
+Once we have our CSV made, we can use the `opm alpha bundle generate` command to generate the rest of the files needed to make an [operator bundle](https://olm.operatorframework.io/docs/tasks/creating-operator-bundle/#contents-of-annotationsyaml-and-the-dockerfile). The operator bundle image is linked in `Catalogs`, with the eventual goal of making the operator installable by end users w/ other clusters. Since we are just trying to validate that our operator works and is packaged properly, we will skip the specifics of `Catalogs` for now.
 
 ## Dev Cluster Testing
 
 The `operator-sdk` makes testing your operator on a dev cluster very easy once the bundle image has been built. While it's primarily meant to be used w/ golang based operators, the `operator-sdk run bundle` command actually doesn't care about the underlying operator implementation. If the metadata is correctly specified in your bundle it will generate the valid Subscription and CatalogSource source objects to install the operator into the currently active cluster in your `~/.kube/config`. This enables rapid testing without requiring publishing the operator to a real external catalog.
-
 
 ## Justfile
 
